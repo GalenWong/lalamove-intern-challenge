@@ -6,6 +6,7 @@ import (
 	"os"	// for reading command-line arguments
 	"bufio"	// for reading file by lines
 	"errors"// for error handling
+	"sort"	// for sorting
 	"github.com/coreos/go-semver/semver"
 	"github.com/google/go-github/github"
 )
@@ -13,9 +14,42 @@ import (
 // LatestVersions returns a sorted slice with the highest version as its first element and the highest version of the smaller minor versions in a descending order
 func LatestVersions(releases []*semver.Version, minVersion *semver.Version) []*semver.Version {
 	var versionSlice []*semver.Version
+	if minVersion == nil {
+		return versionSlice
+	}
+	for _, release := range releases{	// adding all versions >= minVersion into versionSlice
+		if !(release.LessThan(*minVersion)) {
+			versionSlice = append(versionSlice, release)
+		}
+	}
+
+	Sort(versionSlice)
+
 	// This is just an example structure of the code, if you implement this interface, the test cases in main_test.go are very easy to run
 	return versionSlice
 }
+
+
+// sorting algorithm
+type Versions []*semver.Version
+
+func (s Versions) Len() int {
+	return len(s)
+}
+
+func (s Versions) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s Versions) Less(i, j int) bool {
+	return !s[i].LessThan(*s[j])		// soring in descending thus negating the result
+}
+
+// Sort sorts the given slice of Version
+func Sort(versions []*semver.Version) {
+	sort.Sort(Versions(versions))
+}
+
 
 func ProcessString(str string) (author string, repo string, minVer *semver.Version, err error){
 	var i int
@@ -88,10 +122,23 @@ func main() {
 			fmt.Println(err)
 			continue
 		}
-
 		releases, _, err := client.Repositories.ListReleases(ctx, author, repo, opt)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
 		allReleases := make([]*semver.Version, len(releases))
-		
+
+		for i, release := range releases {
+			versionString := *release.TagName
+			if versionString[0] == 'v' {
+				versionString = versionString[1:]
+			}
+			allReleases[i] = semver.New(versionString)
+		}
+		versionSlice := LatestVersions(allReleases, minVer)
+		fmt.Printf("latest versions of kubernetes/kubernetes: %s\n", versionSlice)
 	}
 
 
@@ -117,5 +164,4 @@ func main() {
 	versionSlice := LatestVersions(allReleases, minVersion)
 
 	fmt.Printf("latest versions of kubernetes/kubernetes: %s", versionSlice)
-
 }
