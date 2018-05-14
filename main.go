@@ -23,7 +23,7 @@ func LatestVersions(releases []*semver.Version, minVersion *semver.Version) []*s
 		}
 	}
 
-	Sort(versionSlice)
+	DescendingSort(versionSlice)
 
 	// This is just an example structure of the code, if you implement this interface, the test cases in main_test.go are very easy to run
 	return versionSlice
@@ -42,12 +42,12 @@ func (s Versions) Swap(i, j int) {
 }
 
 func (s Versions) Less(i, j int) bool {
-	return !s[i].LessThan(*s[j])		// soring in descending thus negating the result
+	return s[i].LessThan(*s[j])
 }
 
 // Sort sorts the given slice of Version
-func Sort(versions []*semver.Version) {
-	sort.Sort(Versions(versions))
+func DescendingSort(versions []*semver.Version) {
+	sort.Sort(sort.Reverse(Versions(versions)))
 }
 
 
