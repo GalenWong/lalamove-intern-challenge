@@ -17,20 +17,34 @@ func LatestVersions(releases []*semver.Version, minVersion *semver.Version) []*s
 	if minVersion == nil {
 		return versionSlice
 	}
+	if len(releases) <= 0 {	// empty slice
+		return versionSlice
+	}
 	for _, release := range releases{	// adding all versions >= minVersion into versionSlice
 		if !(release.LessThan(*minVersion)) {
 			versionSlice = append(versionSlice, release)
 		}
 	}
 
-	DescendingSort(versionSlice)
+	DescendingSort(versionSlice)	// sorting verssionSlice into descending order
 
-	// This is just an example structure of the code, if you implement this interface, the test cases in main_test.go are very easy to run
-	return versionSlice
+	var prevMaxMinor = versionSlice[0].Minor
+	var result []*semver.Version
+
+	result = append(result, versionSlice[0])
+
+	for _, release := range versionSlice{
+		if (release.Minor < prevMaxMinor) {
+			prevMaxMinor = release.Minor
+			result = append(result, release)
+		}
+	}
+
+	return result
 }
 
 
-// sorting algorithm
+// sort required pre-defined functions
 type Versions []*semver.Version
 
 func (s Versions) Len() int {
@@ -50,11 +64,17 @@ func DescendingSort(versions []*semver.Version) {
 	sort.Sort(sort.Reverse(Versions(versions)))
 }
 
-
+// separate a string into author, repo, minVer
 func ProcessString(str string) (author string, repo string, minVer *semver.Version, err error){
 	var i int
 	runes := []rune(str)
 	var tokenPos int
+
+	// default error value to be returned
+	author 	= ""
+	repo 	= ""
+	minVer 	= nil
+	err 	= errors.New(fmt.Sprintf("invalid string: \"%s\"", str))
 
 	for i = 0; i < len(str); i++ {
 		if(str[i] == '/'){
@@ -65,7 +85,7 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
 	}
 
 	if i == len(str) {
-		return "", "", nil, errors.New("invalid String")
+		return // error value
 	}
 
 	for ; i < len(str); i++ {
@@ -77,21 +97,18 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
 	}
 
 	if i == len(str) {
-		return "", "", nil, errors.New("invalid String")
+		return // error value
 	}
 
 	defer func(){
 		if recover() != nil {
-			author = ""
-			repo = ""
-			minVer = nil
-			err = errors.New("invalid String")
+			// just return error value
 		}
 	}()
 	
 	minVer = semver.New(string(runes[tokenPos+1:]))
 
-	return author, repo, minVer, err
+	return author, repo, minVer, nil
 }
 
 // Here we implement the basics of communicating with github through the library as well as printing the version
@@ -116,7 +133,7 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	for scanner.Scan() {
+	for scanner.Scan() {	// for each line 
 		author, repo, minVer, err := ProcessString(scanner.Text());
 		if err != nil {
 			fmt.Println(err)
@@ -137,31 +154,10 @@ func main() {
 			}
 			allReleases[i] = semver.New(versionString)
 		}
+
+		fmt.Println("here with string :", scanner.Text())
+
 		versionSlice := LatestVersions(allReleases, minVer)
-		fmt.Printf("latest versions of kubernetes/kubernetes: %s\n", versionSlice)
+		fmt.Printf("latest versions of %s/%s: %s\n", author, repo, versionSlice)
 	}
-
-
-	// Github
-	/*
-	client := github.NewClient(nil)
-	ctx := context.Background()
-	opt := &github.ListOptions{PerPage: 10}
-	*/
-	releases, _, err := client.Repositories.ListReleases(ctx, "kubernetes", "kubernetes", opt)
-	if err != nil {
-		panic(err) // is this really a good way?
-	}
-	minVersion := semver.New("1.8.0")
-	allReleases := make([]*semver.Version, len(releases))
-	for i, release := range releases {
-		versionString := *release.TagName
-		if versionString[0] == 'v' {
-			versionString = versionString[1:]
-		}
-		allReleases[i] = semver.New(versionString)
-	}
-	versionSlice := LatestVersions(allReleases, minVersion)
-
-	fmt.Printf("latest versions of kubernetes/kubernetes: %s", versionSlice)
 }
