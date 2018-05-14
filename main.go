@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-
+	"os"	// for reading command-line arguments
+	"bufio"	// for reading file by lines
+	"errors"// for error handling
 	"github.com/coreos/go-semver/semver"
 	"github.com/google/go-github/github"
 )
@@ -15,15 +17,90 @@ func LatestVersions(releases []*semver.Version, minVersion *semver.Version) []*s
 	return versionSlice
 }
 
+func ProcessString(str string) (author string, repo string, minVer *semver.Version, err error){
+	var i int
+	runes := []rune(str)
+	var tokenPos int
+
+	for i = 0; i < len(str); i++ {
+		if(str[i] == '/'){
+			author = string(runes[0:i])
+			tokenPos = i
+			break
+		}
+	}
+
+	if i == len(str) {
+		return "", "", nil, errors.New("invalid String")
+	}
+
+	for ; i < len(str); i++ {
+		if(str[i] == ','){
+			repo = string(runes[tokenPos+1:i])
+			tokenPos = i
+			break
+		} 
+	}
+
+	if i == len(str) {
+		return "", "", nil, errors.New("invalid String")
+	}
+
+	defer func(){
+		if recover() != nil {
+			author = ""
+			repo = ""
+			minVer = nil
+			err = errors.New("invalid String")
+		}
+	}()
+	
+	minVer = semver.New(string(runes[tokenPos+1:]))
+
+	return author, repo, minVer, err
+}
+
 // Here we implement the basics of communicating with github through the library as well as printing the version
 // You will need to implement LatestVersions function as well as make this application support the file format outlined in the README
 // Please use the format defined by the fmt.Printf line at the bottom, as we will define a passing coding challenge as one that outputs
 // the correct information, including this line
 func main() {
+	pathToFile := os.Args[1]
+
+	file, err := os.Open(pathToFile) 
+
+	if err != nil{
+		panic(err)
+	}
+
+	defer file.Close()
+
 	// Github
 	client := github.NewClient(nil)
 	ctx := context.Background()
 	opt := &github.ListOptions{PerPage: 10}
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		author, repo, minVer, err := ProcessString(scanner.Text());
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		releases, _, err := client.Repositories.ListReleases(ctx, author, repo, opt)
+		allReleases := make([]*semver.Version, len(releases))
+		
+	}
+
+
+	// Github
+	/*
+	client := github.NewClient(nil)
+	ctx := context.Background()
+	opt := &github.ListOptions{PerPage: 10}
+	*/
 	releases, _, err := client.Repositories.ListReleases(ctx, "kubernetes", "kubernetes", opt)
 	if err != nil {
 		panic(err) // is this really a good way?
@@ -40,4 +117,5 @@ func main() {
 	versionSlice := LatestVersions(allReleases, minVersion)
 
 	fmt.Printf("latest versions of kubernetes/kubernetes: %s", versionSlice)
+
 }
