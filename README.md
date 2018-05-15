@@ -1,6 +1,6 @@
 # Technical Challenge - Lalamove
 
-## After thoughts
+## Afterthoughts
 It was a really fun challenge. I learnt a lot from writing codes and reading documentations.
 
 I included data.txt which contains some test strings that I used to test the main routine. 
