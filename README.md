@@ -1,4 +1,23 @@
 # Technical Challenge - Lalamove
+
+## After thoughts
+It was a really fun challenge. I learnt a lot from writing codes and reading documentations.
+
+I included data.txt which contains some test strings that I used to test the main routine. 
+
+They include: 
+- correctly formatted repo
+- non-existent repo
+- incorrect formatting
+- repo that has a large number of releases (node.js) with a low minVer
+- repo that does not have releases
+
+### Difficulties
+- Mastering Golang syntax
+- Error handling
+- Get as much releases as possible without breaking the git API rate limit
+
+
 ## Tech/Infrastructure Intern
 
 This exercise is designed to assess some basic knowledge of writing applications. These include, but are not limited to:
