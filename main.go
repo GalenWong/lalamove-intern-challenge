@@ -175,6 +175,10 @@ func main() {
             if err != nil {
                 fmt.Println(err)
                 isInvalidRepo = true
+                switch err.(type){
+                case *github.ErrorResponse:
+                    fmt.Printf("Invalid repo: %s/%s\n",author, repo)
+                }
                 break
             }
             if len(releases) == 0 {  // may not have any releases
@@ -200,7 +204,6 @@ func main() {
         }
 
         if isInvalidRepo && pageNum==1 {
-            fmt.Printf("Invalid repo: %s/%s\n",author, repo)
             continue
         }
         versionSlice := LatestVersions(allReleases, minVer)
