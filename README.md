@@ -3,7 +3,7 @@
 ## Afterthoughts
 It was a really fun challenge. I learnt a lot from writing codes and reading documentations.
 
-I included data.txt which contains some test strings that I used to test the main routine. 
+I included ```data.txt``` which contains some test strings that I used to test the main routine. 
 
 They include: 
 - correctly formatted repo
@@ -16,10 +16,13 @@ They include:
 
 
 I also implemented extra test cases for the main routine, with extra condition checks. Namely, the cases where the test fails are different length of result and expected, and expected of length 0.
+
 ### Difficulties
 - Mastering Golang syntax
 - Error handling
 - Get as much releases as possible without breaking the git API rate limit
+
+The way I handled the api rate limit issue is to set a upper limit on the number of calls. Theoretically, if the there is no such upper limit, the routine itself will limit calls by checking whether the current call contains version lower or equal to the minVer. If so, stop querying. 
 
 
 ## Tech/Infrastructure Intern
