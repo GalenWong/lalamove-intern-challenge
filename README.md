@@ -22,7 +22,7 @@ I also implemented extra test cases for the main routine, with extra condition c
 - Error handling
 - Get as much releases as possible without breaking the git API rate limit
 
-The way I handled the api rate limit issue is to set a upper limit on the number of calls. Theoretically, if the there is no such upper limit, the routine itself will limit calls by checking whether the current call contains version lower or equal to the minVer. If so, stop querying. 
+The way I handled the api rate limit issue is to set a upper limit on the number of calls. Theoretically, if the there is no such upper limit, the routine will work perfectly fine even if it has to check until version 0.0.1, since the routine itself will limit calls by checking whether the current call contains version lower or equal to the minVer. If so, stop querying. 
 
 
 ## Tech/Infrastructure Intern
