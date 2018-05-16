@@ -14,6 +14,8 @@ They include:
 - repo with tagName that is invalid to semver.New
 - empty line
 
+
+I also implemented extra test cases for the main routine, with extra condition checks. Namely, the cases where the test fails are different length of result and expected, and expected of length 0.
 ### Difficulties
 - Mastering Golang syntax
 - Error handling

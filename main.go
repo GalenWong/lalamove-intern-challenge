@@ -86,7 +86,7 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
     author  = ""
     repo    = ""
     minVer  = nil
-    err     = errors.New(fmt.Sprintf("invalid string: \"%s\"", str))
+    err     = errors.New(fmt.Sprintf("Invalid String: \"%s\"", str))
 
     if len(str) == 0 {
         return
@@ -176,7 +176,6 @@ func main() {
 
             releases, _, err := client.Repositories.ListReleases(ctx, author, repo, opt)
             if err != nil {
-                fmt.Println(err)
                 isInvalidRepo = true
                 switch err.(type){
                 case *github.ErrorResponse:
