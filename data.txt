@@ -2,6 +2,7 @@ repository,min_version
 kubernetes/kubernetes,1.8.0
 prometheus/prometheus,2.2.0
 prometheus/prometheus,2
+prometheus/prometheus,1.0.0
 googleApple/nilrepo,3.14.0
 GalenWong/noteScript,1.0.0
 nodejs/node,4.0.0

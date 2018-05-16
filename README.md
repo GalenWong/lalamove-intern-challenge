@@ -11,6 +11,7 @@ They include:
 - incorrect formatting
 - repo that has a large number of releases (node.js) with a low minVer
 - repo that does not have releases
+- repo with tagName that is invalid to semver.New
 
 ### Difficulties
 - Mastering Golang syntax

@@ -95,11 +95,9 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
             break
         }
     }
-
     if i == len(str) {
         return // error value
     }
-
     for ; i < len(str); i++ {
         if(str[i] == ','){
             repo = string(runes[tokenPos+1:i])
@@ -107,20 +105,30 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
             break
         } 
     }
-
     if i == len(str) {
         return // error value
     }
-
-    defer func(){
-        if recover() != nil {
-            // just return error value
-        }
-    }()
-    
-    minVer = semver.New(string(runes[tokenPos+1:]))
+    minVer, err = GetVersion(string(runes[tokenPos+1:]))
+    if err != nil {
+        return
+    }
 
     return author, repo, minVer, nil
+}
+
+func GetVersion(versionString string) (ver *semver.Version, err error){
+    defer func(){
+        if recover() != nil{
+            ver = nil
+            err = errors.New(fmt.Sprintf("Invalid version string: \"%s\"", versionString))
+        }
+    }()
+    if versionString[0] == 'v' {
+        versionString = versionString[1:]
+    }
+    ver = semver.New(versionString)
+    err = nil
+    return
 }
 
 // Here we implement the basics of communicating with github through the library as well as printing the version
@@ -128,6 +136,11 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
 // Please use the format defined by the fmt.Printf line at the bottom, as we will define a passing coding challenge as one that outputs
 // the correct information, including this line
 func main() {
+
+    if len(os.Args) < 2 {
+        panic(errors.New("No path provided"))
+    }
+
     pathToFile := os.Args[1]
 
     file, err := os.Open(pathToFile) 
@@ -137,7 +150,6 @@ func main() {
     }
 
     defer file.Close()
-
 
     // Github
     client := github.NewClient(nil)
@@ -154,6 +166,7 @@ func main() {
         var minVerIsReached = false
         var allReleases []*semver.Version
         var pageNum = 1
+
         for !minVerIsReached {  // this loop attempts to find the minVersion by iterating through pages
             opt := &github.ListOptions{Page: pageNum, PerPage: 10}
 
@@ -163,13 +176,14 @@ func main() {
                 break
             }
 
-    		for i, release := range releases {
+    		for _, release := range releases {
                 versionString := *release.TagName
-                if versionString[0] == 'v' {
-                    versionString = versionString[1:]
+                version, err := GetVersion(versionString)
+                if err != nil{
+                    continue
                 }
-                allReleases = append(allReleases, semver.New(versionString))
-                if allReleases[i].LessThan(*minVer) || allReleases[i].Equal(*minVer) {    
+                allReleases = append(allReleases, version)
+                if version.LessThan(*minVer) || version.Equal(*minVer) {    
                     minVerIsReached = true  // if find version equal or less than minVer, stop querying
                 }
             }
