@@ -15,7 +15,7 @@ import (
 func LatestVersions(releases []*semver.Version, minVersion *semver.Version) []*semver.Version {
     var versionSlice []*semver.Version
 
-	if minVersion == nil {
+    if minVersion == nil {
         return versionSlice
     }
     if len(releases) == 0 { // empty slice
@@ -166,6 +166,7 @@ func main() {
         var minVerIsReached = false
         var allReleases []*semver.Version
         var pageNum = 1
+        var isInvalidRepo = false
 
         for !minVerIsReached {  // this loop attempts to find the minVersion by iterating through pages
             opt := &github.ListOptions{Page: pageNum, PerPage: 10}
@@ -173,10 +174,14 @@ func main() {
             releases, _, err := client.Repositories.ListReleases(ctx, author, repo, opt)
             if err != nil {
                 fmt.Println(err)
+                isInvalidRepo = true
+                break
+            }
+            if len(releases) == 0 {  // may not have any releases
                 break
             }
 
-    		for _, release := range releases {
+            for _, release := range releases {
                 versionString := *release.TagName
                 version, err := GetVersion(versionString)
                 if err != nil{
@@ -187,15 +192,17 @@ func main() {
                     minVerIsReached = true  // if find version equal or less than minVer, stop querying
                 }
             }
-            if len(releases) == 0 {
-                break
-            }
+
             if pageNum > 7 {    // since github impose a rate call limit, for each repo, we read at most 7 pages
                 break
             }
             pageNum++
         }
 
+        if isInvalidRepo && pageNum==1 {
+            fmt.Printf("Invalid repo: %s/%s\n",author, repo)
+            continue
+        }
         versionSlice := LatestVersions(allReleases, minVer)
         fmt.Printf("latest versions of %s/%s: %s\n", author, repo, versionSlice)
     }
