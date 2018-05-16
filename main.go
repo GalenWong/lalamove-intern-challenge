@@ -88,6 +88,9 @@ func ProcessString(str string) (author string, repo string, minVer *semver.Versi
     minVer  = nil
     err     = errors.New(fmt.Sprintf("invalid string: \"%s\"", str))
 
+    if len(str) == 0 {
+        return
+    }
     for i = 0; i < len(str); i++ {
         if(str[i] == '/'){
             author = string(runes[0:i])
